@@ -9,3 +9,11 @@
 *.iml
 *.ipr
 *.iws
+.idea
+.ijwb
+
+bazel-bin
+bazel-genfiles
+bazel-jarjar
+bazel-out
+bazel-testlogs
