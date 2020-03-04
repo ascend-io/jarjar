@@ -70,16 +70,53 @@ class PackageRemapper extends Remapper
             }
             boolean absolute = s.startsWith("/");
             if (absolute) s = s.substring(1);
-            
+
             s = replaceHelper(s);
-            
+
             if (absolute) s = "/" + s;
             if (s.indexOf(RESOURCE_SUFFIX) < 0)
               return path;
             s = s.substring(0, s.length() - RESOURCE_SUFFIX.length()) + end;
+            if (path.equals(s)) {
+               s = mapResourcePath(path);
+            }
             pathCache.put(path, s);
         }
         return s;
+    }
+
+    /**
+     * Example:
+     *   Input File: META-INF/native/libnetty_tcnative_linux_x86_64.so
+     *   Rule:
+     *     Pattern: META-INF.native.libnetty_tcnative*RESOURCE
+     *     Result: META-INF.native.libcom_example_shaded_netty_tcnative@1RESOURCE
+     *   Renamed File: META-INF/native/libcom_example_shaded_netty_tcnative_linux_x86_64.so
+     * Note: input file path in this case will be "META-INF/native/libnetty_tcnative_linux_x86_64RESOURCE" (prefix of
+     *   the path, before the first '.' (dot), and plus suffix "RESOURCE"). Therefore, pattern should have a suffix
+     *   "RESOURCE". Also, result should have a suffix "RESOURCE": it will be replaced with the suffix from the input.
+     */
+    private String mapResourcePath(String path) {
+        String s = path;
+        int firstDot = s.indexOf('.');
+        String suffix;
+        if (firstDot < 0) {
+            suffix = "";
+        } else {
+            suffix = s.substring(firstDot);
+            s = s.substring(0, firstDot) + RESOURCE_SUFFIX;
+        }
+        boolean absolute = s.startsWith("/");
+        if (absolute) s = s.substring(1);
+
+        s = replaceHelper(s);
+
+        if (absolute) s = "/" + s;
+        if (!s.endsWith(RESOURCE_SUFFIX)) {
+            return path;
+        } else {
+            return s.substring(0, s.length() - RESOURCE_SUFFIX.length()) + suffix;
+        }
     }
 
     public Object mapValue(Object value) {
